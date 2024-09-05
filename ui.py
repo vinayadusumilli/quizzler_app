@@ -1,5 +1,7 @@
 from tkinter import *
+from tkinter import simpledialog
 from typing import Final
+
 from brain import QuizBrain
 
 FONT: Final[tuple] = ("Arial", 20, "bold")
@@ -12,8 +14,10 @@ class Interface:
         self.window = Tk()
         self.window.title(f"Quiz Category ==> {quiz_brain.current_question_category}")
         self.window.config(padx=50, pady=50, bg=BACKGROUND_COLOR)
+
         # Label for ScoreCard
-        self.score_label = Label(text=f"Score: {self.quiz_brain.score}", bg=BACKGROUND_COLOR, font=FONT)
+        self.score_label = Label(text=f"Score: {self.quiz_brain.score}/{self.quiz_brain.total_questions_number}",
+                                 bg=BACKGROUND_COLOR, font=FONT)
         self.score_label.grid(row=0, column=1)
         # Canvas setup to display quiz questions
         self.canvas = Canvas(width=400, height=500, bg="white", highlightthickness=0)
@@ -30,12 +34,30 @@ class Interface:
                                    image=self.false_image, command=self.false_clicked)
         self.true_button.grid(row=3, column=0)
         self.false_button.grid(row=3, column=1)
+        self.user_mail = simpledialog.askstring(title="Email Id", prompt="Enter your email to get score to your Email: ")
 
         self.window.mainloop()
 
-    def true_clicked(self):
+    def next_quiz_question(self):
+        self.canvas.config(bg="white")
+        self.score_label.config(text=f"Score: {self.quiz_brain.score}/{self.quiz_brain.total_questions_number}")
         self.quiz_brain.next_question()
         self.canvas.itemconfig(self.canvas_text, text=self.quiz_brain.current_question)
 
+    def true_clicked(self):
+        is_right = self.quiz_brain.check_answer(user_answer="True")
+        self.give_feedback(is_right=is_right)
+
     def false_clicked(self):
-        self.quiz_brain.next_question()
+        is_right = self.quiz_brain.check_answer(user_answer="False")
+        self.give_feedback(is_right=is_right)
+
+    def give_feedback(self, is_right):
+        if is_right:
+            self.canvas.config(bg="green")
+        else:
+            self.canvas.config(bg="red")
+        if self.quiz_brain.current_question_number < self.quiz_brain.total_questions_number:
+            self.window.after(1000, self.next_quiz_question)
+        else:
+            print("Hiii")
